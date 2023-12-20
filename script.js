@@ -1,70 +1,118 @@
-function railFenceEncrypt(plaintext, rails) {
-    let encryptedText = '';
-    for (let i = 0; i < rails; i++) {
-        for (let j = i; j < plaintext.length; j += 2 * (rails - 1)) {
-            encryptedText += plaintext.charAt(j);
-            if (i > 0 && i < rails - 1) {
-                let secondIndex = j + 2 * (rails - i - 1);
-                if (secondIndex < plaintext.length) {
-                    encryptedText += plaintext.charAt(secondIndex);
-                }
-            }
+// Function to encrypt plaintext using Rail Fence Cipher
+function railFenceEncrypt(text, key) {
+    let rail = new Array(key).fill().map(() => new Array(text.length).fill('\n'));
+    
+    let dir_down = false;
+    let row = 0, col = 0;
+    
+    for (let i = 0; i < text.length; i++) {
+        if (row === 0 || row === key - 1) dir_down = !dir_down;
+        rail[row][col++] = text[i];
+    
+        dir_down ? row++ : row--;
+    }
+    
+    let result = '';
+    for (let i = 0; i < key; i++) {
+        for (let j = 0; j < text.length; j++) {
+            if (rail[i][j] !== '\n') result += rail[i][j];
         }
     }
-    return encryptedText;
+    
+    return result;
 }
 
-function railFenceDecrypt(ciphertext, rails) {
-    let decryptedText = '';
-    let cycleLength = 2 * (rails - 1);
-    let railIndexes = [];
+// Function to decrypt ciphertext using Rail Fence Cipher
+function railFenceDecrypt(cipher, key) {
+    let rail = new Array(key).fill().map(() => new Array(cipher.length).fill('\n'));
+    
+    let dir_down = false;
+    let row = 0, col = 0;
+    
+    for (let i = 0; i < cipher.length; i++) {
+        if (row === 0) dir_down = true;
+        if (row === key - 1) dir_down = false;
+    
+        rail[row][col++] = '*';
+    
+        dir_down ? row++ : row--;
+    }
+    
     let index = 0;
-
-    for (let i = 0; i < rails; i++) {
-        let interval1 = 2 * (rails - 1 - i);
-        let interval2 = cycleLength - interval1;
-
-        let j = 0;
-        while (j < ciphertext.length) {
-            if (i === 0 || i === rails - 1) {
-                railIndexes.push(j);
-                j += cycleLength;
-            } else {
-                railIndexes.push(j);
-                j += (index % 2 === 0) ? interval1 : interval2;
-                index++;
+    for (let i = 0; i < key; i++) {
+        for (let j = 0; j < cipher.length; j++) {
+            if (rail[i][j] === '*' && index < cipher.length) {
+                rail[i][j] = cipher[index++];
             }
         }
-        index = 0;
     }
-
-    for (let i = 0; i < railIndexes.length; i++) {
-        decryptedText += ciphertext.charAt(railIndexes.indexOf(i));
+    
+    let result = '';
+    row = 0, col = 0;
+    for (let i = 0; i < cipher.length; i++) {
+        if (row === 0) dir_down = true;
+        if (row === key - 1) dir_down = false;
+    
+        if (rail[row][col] !== '*') result += rail[row][col++];
+    
+        dir_down ? row++ : row--;
     }
-
-    return decryptedText;
+    
+    return result;
 }
 
+// Get HTML elements
+const plainTextElement = document.getElementById("plainText");
+const keyElement = document.getElementById("key");
+const resultElement = document.getElementById("result");
+const encryptButton = document.getElementById("enBtn");
+const decryptButton = document.getElementById("dcBtn");
+
+// Event listener for encryption button
+encryptButton.addEventListener("click", function() {
+    const plaintext = plainTextElement.value;
+    const key = parseInt(keyElement.value); // Parse key as an integer
+
+    if (!isNaN(key)) {
+        const encryptedText = railFenceEncrypt(plaintext, key);
+        resultElement.value = encryptedText;
+    } else {
+        alert("Please enter a valid key (number of rails).");
+    }
+});
+
+// Event listener for decryption button
+decryptButton.addEventListener("click", function() {
+    const ciphertext = plainTextElement.value;
+    const key = parseInt(keyElement.value); // Parse key as an integer
+
+    if (!isNaN(key)) {
+        const decryptedText = railFenceDecrypt(ciphertext, key);
+        resultElement.value = decryptedText;
+    } else {
+        alert("Please enter a valid key (number of rails).");
+    }
+});
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// function railFenceEncrypt(plaintext, rails) {
+//     let encryptedText = '';
+//     for (let i = 0; i < rails; i++) {
+//         for (let j = i; j < plaintext.length; j += 2 * (rails - 1)) {
+//             encryptedText += plaintext.charAt(j);
+//             if (i > 0 && i < rails - 1) {
+//                 let secondIndex = j + 2 * (rails - i - 1);
+//                 if (secondIndex < plaintext.length) {
+//                     encryptedText += plaintext.charAt(secondIndex);
+//                 }
+//             }
+//         }
+//     }
+//     return encryptedText;
+// }
 
 
 // function railFenceDecrypt(ciphertext, rails) {
@@ -84,48 +132,33 @@ function railFenceDecrypt(ciphertext, rails) {
 //     return decryptedText;
 // }
 
-const plainTextElement = document.getElementById("plainText");
-const keyElement = document.getElementById("key");
-const cipherTextElement = document.getElementById("cipherText");
-const encryptButton = document.getElementById("enBtn");
-const decryptButton = document.getElementById("dcBtn");
+// decryptButton.addEventListener("click", function() {
+//     // console.log("asdsfda")
+//     const ciphertext = plainTextElement.value;
+//     const key = keyElement.value;
+//     const rails = parseInt(key); 
 
-encryptButton.addEventListener("click", function() {
-    const plaintext = plainTextElement.value;
-    const key = keyElement.value;
-    const rails = parseInt(key); 
+//     if (!isNaN(rails)) {
+//         const decryptedText = railFenceDecrypt(ciphertext, rails);
+//         console.log(decryptedText)
+//         // plainTextElement.value = decryptedText;
+//     } else {
+//         alert("Please enter a valid key (number of rails).");
+//     }
+// });
+// encryptButton.addEventListener("click", function() {
+//     const plaintext = plainTextElement.value;
+//     const key = keyElement.value;
+//     const rails = parseInt(key); 
 
-    if (!isNaN(rails)) {
-        const encryptedText = railFenceEncrypt(plaintext, rails);
-        cipherTextElement.value = encryptedText;
-    } else {
-        alert("Please enter a valid key (number of rails).");
-    }
-});
-
-
-decryptButton.addEventListener("click", function() {
-    console.log("asdsfda")
-    const ciphertext = cipherTextElement.value;
-    const key = keyElement.value;
-    const rails = parseInt(key); 
-
-    if (!isNaN(rails)) {
-        const decryptedText = railFenceDecrypt(ciphertext, rails);
-        plainTextElement.value = decryptedText;
-    } else {
-        alert("Please enter a valid key (number of rails).");
-    }
-});
-
-
-
-
-
-
-
-
-
+//     if (!isNaN(rails)) {
+//         const encryptedText = railFenceEncrypt(plaintext, rails);
+//         console.log(encryptedText)
+//         // cipherTextElement.value = encryptedText;
+//     } else {
+//         alert("Please enter a valid key (number of rails).");
+//     }
+// });
 
 
 
